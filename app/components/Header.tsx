@@ -1,12 +1,18 @@
-export default function Header(){
-return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur-sm">
+'use client'; // 1. ESSENCIAL: Transforma em Client Component
+
+import { useAuth } from "../context/AuthContext"; // Ajuste o caminho
+
+export default function Header() {
+  // 2. Consumindo os dados reais do contexto
+  const { usuario, logout } = useAuth();
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur-sm transition-all">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
         {/* Perfil do Usuário */}
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 border border-slate-200 text-slate-500">
-            {/* SVG Ícone de Usuário (padrão W3C) */}
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 border border-blue-100 text-blue-600">
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
               viewBox="0 0 24 24" 
@@ -23,21 +29,22 @@ return (
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold text-slate-800 leading-tight">
-              Renato Fraga
+              {/* 3. Nome Dinâmico */}
+              {usuario?.name || "Renato Fraga"}
             </span>
             <span className="text-[10px] uppercase tracking-wider font-medium text-slate-400">
-              Admin Sistema
+              ID: {usuario?.codigo || "Admin"}
             </span>
           </div>
         </div>
 
         {/* Botão Sair */}
         <button 
-          className="group flex items-center gap-2 rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100"
+          onClick={logout} // 4. Ação real de logout
+          className="group flex items-center gap-2 rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-red-50 hover:border-red-200 hover:text-red-600 active:scale-95"
           aria-label="Sair do sistema"
         >
           <span className="hidden sm:inline">Sair</span>
-          {/* SVG Ícone de LogOut (padrão W3C) */}
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
             viewBox="0 0 24 24" 
@@ -46,7 +53,7 @@ return (
             strokeWidth="2" 
             strokeLinecap="round" 
             strokeLinejoin="round" 
-            className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors"
+            className="w-4 h-4 text-slate-400 group-hover:text-red-500 transition-colors"
           >
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
             <polyline points="16 17 21 12 16 7" />

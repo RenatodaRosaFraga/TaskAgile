@@ -1,30 +1,30 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import Sidebar from "../components/Sidebar"; // Não esqueça do import!
 
 export default function SistemaLayout({ children }: { children: React.ReactNode }) {
   return (
-    /* A classe min-h-screen garante que o container tenha no mínimo a altura da tela.
-       O flex-col empilha Header, Main e Footer.
-    */
-    <div className="relative flex min-h-screen flex-col bg-slate-50">
-      
-      {/* A Sidebar sendo flutuante (fixed), não ocupa espaço no fluxo aqui, 
-          então o Header e o Main encostam no topo/esquerda normalmente. 
+    <div className="relative min-h-screen bg-slate-50">
+      {/* Sidebar: Fixed no lado esquerdo */}
+      <Sidebar />
+
+      {/* Container de Conteúdo: 
+          - No desktop (md:), adicionamos pl-64 para "empurrar" tudo para a direita da Sidebar.
+          - flex-col e min-h-screen mantêm o Footer no fundo.
       */}
-      {/* <Sidebar /> */}
+      <div className="flex flex-col min-h-screen md:pl-64 transition-all duration-300">
+        
+        {/* Header agora fica alinhado com o conteúdo, não sobre a Sidebar */}
+        <Header />
 
-      <Header />
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          <div className="w-full animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {children}
+          </div>
+        </main>
 
-      {/* flex-1: Faz o main 'esticar' para preencher todo o espaço vazio,
-          empurrando o Footer para o final da página.
-      */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        <div className="w-full">
-          {children}
-        </div>
-      </main>
-
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 }
