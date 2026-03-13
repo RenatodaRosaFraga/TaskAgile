@@ -7,29 +7,42 @@ import { useAuth, Usuario } from '../context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth(); // Consumindo nosso contexto
+  const { login } = useAuth(); 
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (formData: FormData) => {
+    // O React 19 permite pegar os dados do formulário assim:
     const email = formData.get('email');
     const senha = formData.get('senha');
 
     setLoading(true);
     
     try {
-      // Simulação de chamada de API
+      // Simulação de chamada de API (delay de 1.2s)
       await new Promise(resolve => setTimeout(resolve, 1200));
 
-      // Criando a instância do usuário (Exemplo vindo da sua futura API)
-      const usuarioMock = new Usuario(1, "Renato Fraga");
-      const tokenMock = "jwt_token_gerado_pelo_backend";
+      /**
+       * AJUSTE DE ERRO: 
+       * Instanciamos a classe com os 4 parâmetros necessários:
+       * (codigo, name, cpf, ativo)
+       */
+      const usuarioMock = new Usuario(
+        1, 
+        "Renato Fraga", 
+        "000.000.000-00", 
+        true
+      );
+      
+      const tokenMock = "jwt_token_exemplo_2026";
 
-      // Salva no Contexto e Cookies
+      // Salva no Contexto e nos Cookies via função login do nosso Hook
       login(usuarioMock, tokenMock);
 
+      // Redireciona para a home após o sucesso
       router.push("/home");
     } catch (error) {
       console.error("Falha no login", error);
+      alert("Credenciais inválidas ou erro no servidor.");
     } finally {
       setLoading(false);
     }
@@ -38,6 +51,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] font-sans text-slate-900 antialiased flex flex-col justify-center py-12 px-6">
       
+      {/* Botão Flutuante Voltar */}
       <div className="absolute top-8 left-8">
         <Link href="/" className="text-sm font-bold text-slate-500 hover:text-slate-950 transition-colors flex items-center gap-2 group">
           <span className="group-hover:-translate-x-1 transition-transform">←</span> Voltar
@@ -45,6 +59,7 @@ export default function LoginPage() {
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-[400px]">
+        {/* Branding */}
         <div className="flex flex-col items-center mb-10">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-950 text-white font-black text-2xl shadow-2xl shadow-slate-950/30">
             TA
@@ -55,8 +70,9 @@ export default function LoginPage() {
           <p className="text-slate-500 font-medium">Gestão sem esforço.</p>
         </div>
 
+        {/* Card de Login */}
         <div className="bg-white px-8 py-10 shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 rounded-[2.5rem]">
-          {/* No React 19, passamos a função diretamente para o action */}
+          {/* Usando action do React 19 */}
           <form action={handleLogin} className="space-y-6">
             
             <div className="flex flex-col gap-2">
