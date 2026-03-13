@@ -30,7 +30,7 @@ export default function Sidebar() {
           <Icons.Home /> Home
         </Link>
         <Link 
-          href="/usuario" 
+          href="/usuarios" 
           className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
             isActive('/usuario') 
             ? 'bg-slate-950 text-white shadow-lg' 
