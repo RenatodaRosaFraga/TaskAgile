@@ -12,7 +12,7 @@ export default function Usuarios() {
 
     useEffect(() => {
         // Chamada da função para carregar os dados ao montar o componente
-
+        carregarDados(); // <--- Faltava isso aqui!
     }, []);
 
     const carregarDados = async () => {
