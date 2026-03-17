@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Projeto, projetoMock } from '@/app/mock/equipes';
+import { Projeto, projetoMock } from '@/app/mock/projeto';
 import { useRouter } from 'next/navigation';
 
 export default function Projetos() {
@@ -49,7 +49,8 @@ export default function Projetos() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {projetos.map((projeto) => (
             <div key={projeto.id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md transition-all group">
-              {/* Indicador Visual com cor dinâmica baseada no ID */}
+              
+              {/* Indicador Visual com cor dinâmica */}
               <div className={`h-2 w-10 rounded-full mb-4 ${projeto.id % 2 === 0 ? 'bg-indigo-500' : 'bg-slate-950'}`} />
               
               <h2 className="text-xl font-bold text-slate-950 mb-2 group-hover:text-indigo-600 transition-colors">
@@ -65,12 +66,27 @@ export default function Projetos() {
                 </span>
               </div>
 
+              {/* ÁREA DE AÇÕES ATUALIZADA */}
               <div className="mt-6 pt-6 border-t border-slate-50 flex justify-between items-center">
-                <button className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-950 transition-colors">
-                  Ver Detalhes →
-                </button>
+                <div className="flex items-center gap-5">
+                  <button className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-950 transition-colors">
+                    Detalhes →
+                  </button>
+                  
+                  {/* BOTÃO EDITAR */}
+                  <Link 
+                    href={`/projetos/${projeto.id}/editar`}
+                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                      <path d="m15 5 4 4"/>
+                    </svg>
+                    Editar
+                  </Link>
+                </div>
                 
-                {/* Badge de Status Fictício */}
+                {/* Badge de Status */}
                 <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-md">
                   Ativo
                 </span>
