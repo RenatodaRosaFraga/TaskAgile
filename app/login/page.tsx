@@ -4,6 +4,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { useAuth, Usuario } from '../context/AuthContext';
+import axios from 'axios';
+
+interface LoginResponse{
+  token: string
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,25 +23,36 @@ export default function LoginPage() {
     setLoading(true);
     
     try {
-      // Simulação de chamada de API (delay de 1.2s)
-      await new Promise(resolve => setTimeout(resolve, 1200));
+      
+        debugger;
+        // //var loginResult = await fetch("http//localhost:8080/auth/login", {
+        //   method : 'POST',
+        //   headers:{
+        //     'Content-Type':'application/json'
+        //   },
+        //   body: JSON.stringify({email:email, senha})
+        // });
 
-      /**
-       * AJUSTE DE ERRO: 
-       * Instanciamos a classe com os 4 parâmetros necessários:
-       * (codigo, name, cpf, ativo)
-       */
+        var loginResult = await axios.post<LoginResponse>('http://localhost:8080/auth/login',{email:email, senha:senha});
+
+        if(loginResult.status !==200){
+          alert("Usuario ou senha inválido!")
+          return;
+        }
+
+        
+
       const usuarioMock = new Usuario(
         1, 
         "Renato Fraga", 
         "000.000.000-00", 
-        true
+        "ATIVO"
       );
       
       const tokenMock = "jwt_token_exemplo_2026";
 
       // Salva no Contexto e nos Cookies via função login do nosso Hook
-      login(usuarioMock, tokenMock);
+      login(usuarioMock, loginResult.data.token);
 
       // Redireciona para a home após o sucesso
       router.push("/home");

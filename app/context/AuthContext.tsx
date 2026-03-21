@@ -4,7 +4,7 @@ import { createContext, ReactNode, useContext, useEffect, useState, useMemo } fr
 import Cookies from "js-cookie";
 
 export class Usuario {
-  constructor(public codigo: number, public nome: string, public cpf: string, public ativo: boolean) {}
+  constructor(public id: number, public nome: string, public email: string, public status: string) {}
 }
 
 interface AuthContextType {
@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const data = JSON.parse(usuarioRecover);
           // Só atualizamos se os dados forem realmente novos/diferentes
-          setUsuario(new Usuario(data.codigo, data.nome, "", true ));
+          setUsuario(new Usuario(data.codigo, data.nome, "", "ATIVO" ));
           setToken(tokenRecover);
         } catch (e) {
           console.error("Erro ao restaurar sessão:", e);
