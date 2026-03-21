@@ -4,7 +4,7 @@ import { createContext, ReactNode, useContext, useEffect, useState, useMemo } fr
 import Cookies from "js-cookie";
 
 export class Usuario {
-  constructor(public id: number, public nome: string, public email: string, public status: string) {}
+  constructor(public id: number|null, public nome: string, public email: string, public status: string) {}
 }
 
 interface AuthContextType {

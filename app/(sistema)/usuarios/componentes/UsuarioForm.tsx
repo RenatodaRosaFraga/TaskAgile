@@ -2,6 +2,7 @@
 
 import { Usuario } from "@/app/context/AuthContext"
 import { usuarioMock } from "@/app/mock/usuario";
+import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react"
@@ -15,7 +16,7 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
     
     // Inicializa o estado. 
     const [usuario, setUsuario] = useState<Usuario>(
-        usuarioExistente || new Usuario(0, '', '', true)
+        usuarioExistente || new Usuario(null , '', '', "ATIVO")
     );
 
     // ESSENCIAL: Atualiza o estado quando o usuário chega da busca assíncrona
@@ -25,22 +26,22 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
         }
     }, [usuarioExistente]);
 
-    const handlerChange = (campo: 'nome' | 'cpf', valor: string) => {
+    const handlerChange = (campo: 'nome' | 'email', valor: string) => {
         setUsuario(prev =>
             new Usuario(
-                prev.codigo,
+                prev.id,
                 campo === 'nome' ? valor : prev.nome,
-                campo === 'cpf' ? valor : prev.cpf,
-                prev.ativo
+                campo === 'email' ? valor : prev.email,
+                prev.status
             )
         )
     }
 
     const handlesalvar = async () => {
+        debugger
         try {
-            // Agora o salvar funciona para ambos (novo e edição)
-            await usuarioMock.salvar(usuario);
-            alert("Usuário salvo com sucesso!");
+            var dadosResult = await axios.post<number>('http://localhost:8080/usuarios', usuario);
+            alert("Usuário salvo com sucesso!" + dadosResult.data)
             router.push("/usuarios");
         } catch (error) {
             alert("Erro ao salvar usuário.");
@@ -70,14 +71,15 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
                     {/* Campo: CPF */}
                     <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
-                            CPF
+                            Email
                         </label>
                         <input
+                            type="email"
                             required
                             maxLength={14}
-                            value={usuario.cpf}
-                            onChange={(e) => handlerChange('cpf', e.target.value)}
-                            placeholder="999.999.999-99"
+                            value={usuario.email}
+                            onChange={(e) => handlerChange('email', e.target.value)}
+                            placeholder="seu@email.com"
                             className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all placeholder:text-slate-400 text-sm font-medium font-mono"
                         />
                     </div>
