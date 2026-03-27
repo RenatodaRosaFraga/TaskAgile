@@ -1,7 +1,6 @@
 'use client';
 
 import { Usuario } from "@/app/context/AuthContext"
-import { usuarioMock } from "@/app/mock/usuario";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,11 +14,12 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
     const router = useRouter();
     
     // Inicializa o estado. 
+    // Nota: Usei um objeto simples se o Usuario for uma interface, 
+    // ou mantenha o 'new' se for uma classe.
     const [usuario, setUsuario] = useState<Usuario>(
-        usuarioExistente || new Usuario(null , '', '', "ATIVO")
+        usuarioExistente || { id: null, nome: '', email: '', status: "ATIVO" } as Usuario
     );
 
-    // ESSENCIAL: Atualiza o estado quando o usuário chega da busca assíncrona
     useEffect(() => {
         if (usuarioExistente) {
             setUsuario(usuarioExistente);
@@ -27,33 +27,49 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
     }, [usuarioExistente]);
 
     const handlerChange = (campo: 'nome' | 'email', valor: string) => {
-        setUsuario(prev =>
-            new Usuario(
-                prev.id,
-                campo === 'nome' ? valor : prev.nome,
-                campo === 'email' ? valor : prev.email,
-                prev.status
-            )
-        )
-    }
+        setUsuario(prev => ({
+            ...prev,
+            [campo]: valor
+        }));
+    };
 
-    const handlesalvar = async () => {
-        debugger
+    const handlesalvar = async (e: React.FormEvent) => {
+        e.preventDefault(); // Agora o onSubmit vai disparar isso corretamente
+
         try {
-            var dadosResult = await axios.post<number>('http://localhost:8080/usuarios', usuario);
-            alert("Usuário salvo com sucesso!" + dadosResult.data)
-            router.push("/usuarios");
+            // Se tem ID, é Edição (PUT)
+            if (usuario.id !== null) {
+                const url = `http://localhost:8080/usuarios/${usuario.id}`;
+                const dadosResult = await axios.put<number>(url, usuario);
+
+                if (dadosResult.status === 200) {
+                    alert("Usuário atualizado com sucesso!");
+                    router.push("/usuarios");
+                    router.refresh();
+                }
+            } 
+            // Se não tem ID, é Criação (POST)
+            else {
+                const dadosResult = await axios.post<number>('http://localhost:8080/usuarios', usuario);
+                
+                if (dadosResult.status === 201 || dadosResult.status === 200) {
+                    alert("Usuário criado com sucesso! Código: " + dadosResult.data);
+                    router.push("/usuarios");
+                    router.refresh();
+                }
+            }
         } catch (error) {
-            alert("Erro ao salvar usuário.");
+            console.error("Erro na requisição:", error);
+            alert("Erro ao salvar usuário. Verifique a conexão com o servidor.");
         }
-    }
+    };
 
     return (
-        <form action={handlesalvar} >
+        // AJUSTE: Trocado 'action' por 'onSubmit'
+        <form onSubmit={handlesalvar} >
             <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                
-
                 <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm space-y-6">
+                    
                     {/* Campo: Nome Completo */}
                     <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
@@ -63,12 +79,12 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
                             required
                             value={usuario.nome}
                             onChange={(e) => handlerChange('nome', e.target.value)}
-                            placeholder="João da Silva Sauro"
-                            className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all placeholder:text-slate-400 text-sm font-medium"
+                            placeholder="Ex: Renato Fraga"
+                            className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all text-sm font-medium"
                         />
                     </div>
 
-                    {/* Campo: CPF */}
+                    {/* Campo: Email */}
                     <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
                             Email
@@ -76,27 +92,25 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
                         <input
                             type="email"
                             required
-                            maxLength={14}
                             value={usuario.email}
                             onChange={(e) => handlerChange('email', e.target.value)}
                             placeholder="seu@email.com"
-                            className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all placeholder:text-slate-400 text-sm font-medium font-mono"
+                            className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all text-sm font-medium"
                         />
                     </div>
 
-                    {/* Ações do Formulário */}
+                    {/* Ações */}
                     <div className="flex items-center gap-4 pt-4">
                         <button
                             type="submit"
-                            className="flex-1 py-4 bg-slate-950 hover:bg-slate-800 text-white font-black rounded-2xl shadow-xl shadow-slate-950/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                            className="flex-1 py-4 bg-slate-950 hover:bg-slate-800 text-white font-black rounded-2xl shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-                            {usuarioExistente ? "Salvar Alterações" : "Criar Usuário"}
+                            {usuario.id ? "Salvar Alterações" : "Criar Usuário"}
                         </button>
 
                         <Link
                             href="/usuarios"
-                            className="px-8 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-all active:scale-[0.98] text-center"
+                            className="px-8 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-all text-center"
                         >
                             Cancelar
                         </Link>
