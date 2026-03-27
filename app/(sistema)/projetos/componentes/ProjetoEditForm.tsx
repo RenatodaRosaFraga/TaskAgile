@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import { Projeto, projetoMock } from "@/app/mock/projeto"; 
+import axios from "axios";
+import { Projeto } from "@/app/mock/projeto"; 
 
 interface Props {
     projetoInicial: Projeto;
@@ -11,30 +12,48 @@ interface Props {
 
 export default function ProjetoEditForm({ projetoInicial }: Props) {
     const router = useRouter();
+    const [carregando, setCarregando] = useState(false);
     
-    // Iniciamos o estado com os valores que já existem no projeto
+    // Ajuste: Limpamos a data para garantir que o input consiga exibir
+    // Se vier "2026-03-27T15:00:00", vira "2026-03-27"
+    const dataFormatada = projetoInicial.prazo?.includes('T') 
+        ? projetoInicial.prazo.split('T')[0] 
+        : projetoInicial.prazo;
+
     const [projeto, setProjeto] = useState({
         nome: projetoInicial.nome,
-        prazo: projetoInicial.prazo
+        prazo: dataFormatada
     });
 
     const handlerChange = (campo: string, valor: string) => {
         setProjeto(prev => ({ ...prev, [campo]: valor }));
     };
 
-    const handleSubmit = async (e: any) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setCarregando(true);
         
-        // Usamos o método atualizar que criamos no seu Mock
-        await projetoMock.atualizar(projetoInicial.id, {
-            nome: projeto.nome,
-            prazo: projeto.prazo
-        });
+        try {
+            const response = await axios.put(`http://localhost:8080/projetos/${projetoInicial.id}`, {
+                id: projetoInicial.id, // Importante enviar o ID no corpo também para o Hibernate
+                nome: projeto.nome,
+                prazo: projeto.prazo,
+                status: (projetoInicial as any).status || "ATIVO" 
+            });
 
-        alert("Projeto atualizado com sucesso!");
-        
-        router.push("/projetos");
-        router.refresh(); 
+            if (response.status === 200 || response.status === 204) {
+                alert("Projeto atualizado no banco de dados!");
+                
+                // Força o redirecionamento e a atualização da rota
+                router.push("/projetos");
+                router.refresh(); 
+            }
+        } catch (error) {
+            console.error("Erro ao atualizar no servidor:", error);
+            alert("Erro ao conectar com o servidor Spring Boot.");
+        } finally {
+            setCarregando(false);
+        }
     };
 
     return (
@@ -47,9 +66,10 @@ export default function ProjetoEditForm({ projetoInicial }: Props) {
                     </label>
                     <input
                         required
+                        disabled={carregando}
                         value={projeto.nome}
                         onChange={(e) => handlerChange('nome', e.target.value)}
-                        className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all text-sm font-medium"
+                        className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all text-sm font-medium disabled:opacity-50"
                     />
                 </div>
 
@@ -59,19 +79,21 @@ export default function ProjetoEditForm({ projetoInicial }: Props) {
                     </label>
                     <input
                         required
+                        disabled={carregando}
                         type="date"
                         value={projeto.prazo}
                         onChange={(e) => handlerChange('prazo', e.target.value)}
-                        className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all text-sm font-medium"
+                        className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all text-sm font-medium disabled:opacity-50"
                     />
                 </div>
 
                 <div className="flex items-center gap-4 pt-4">
                     <button
                         type="submit"
-                        className="flex-1 py-4 bg-slate-950 hover:bg-slate-800 text-white font-black rounded-2xl shadow-xl transition-all active:scale-[0.98]"
+                        disabled={carregando}
+                        className="flex-1 py-4 bg-slate-950 hover:bg-slate-800 text-white font-black rounded-2xl shadow-xl transition-all active:scale-[0.98] disabled:bg-slate-400"
                     >
-                        Salvar Alterações
+                        {carregando ? "Salvando..." : "Salvar Alterações"}
                     </button>
 
                     <Link
