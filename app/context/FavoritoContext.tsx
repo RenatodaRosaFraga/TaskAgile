@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Projeto } from '@/app/mock/projeto';
+import Cookies from 'js-cookie';
 
 interface FavoritoContextType {
   favoritos: Projeto[];
@@ -11,27 +12,39 @@ interface FavoritoContextType {
 
 const FavoritoContext = createContext<FavoritoContextType | undefined>(undefined);
 
+// Nome da chave para o cookie
+const COOKIE_NAME = '@TaskAgile:favoritos';
+
 export function FavoritoProvider({ children }: { children: React.ReactNode }) {
   const [favoritos, setFavoritos] = useState<Projeto[]>([]);
 
-  // Carrega favoritos do LocalStorage ao iniciar
+  // 1. Carrega favoritos dos Cookies ao iniciar (apenas no cliente)
   useEffect(() => {
-    const salvos = localStorage.getItem('@TaskAgile:favoritos');
-    if (salvos) setFavoritos(JSON.parse(salvos));
+    const salvos = Cookies.get(COOKIE_NAME);
+    if (salvos) {
+      try {
+        setFavoritos(JSON.parse(salvos));
+      } catch (e) {
+        console.error("Erro ao converter favoritos dos cookies", e);
+      }
+    }
   }, []);
 
-  // Salva no LocalStorage sempre que mudar
+  // 2. Salva nos Cookies sempre que a lista mudar
   useEffect(() => {
-    localStorage.setItem('@TaskAgile:favoritos', JSON.stringify(favoritos));
+    // Definimos uma expiração de 7 dias para o cookie não sumir logo
+    Cookies.set(COOKIE_NAME, JSON.stringify(favoritos), { expires: 7, path: '/' });
   }, [favoritos]);
 
   const alternarFavorito = (projeto: Projeto) => {
     setFavoritos((prev) => {
       const existe = prev.find((p) => p.id === projeto.id);
       if (existe) {
-        return prev.filter((p) => p.id !== projeto.id); // Remove se já for favorito
+        // Remove se já for favorito
+        return prev.filter((p) => p.id !== projeto.id);
       }
-      return [...prev, projeto]; // Adiciona se não for
+      // Adiciona se não for
+      return [...prev, projeto];
     });
   };
 
