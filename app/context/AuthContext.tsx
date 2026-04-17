@@ -2,18 +2,8 @@
 
 import { createContext, ReactNode, useContext, useEffect, useState, useMemo } from "react";
 import Cookies from "js-cookie";
-
-export class Usuario {
-  constructor(public id: number|null, public nome: string, public email: string, public status: string) {}
-}
-
-interface AuthContextType {
-  usuario: Usuario | null;
-  token: string | null;
-  login: (usuario: Usuario, token: string) => void;
-  logout: () => void;
-  isInitializing: boolean;
-}
+// Importando do novo arquivo centralizado
+import { type AuthContextType, Usuario } from "../types/auth"; 
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -23,7 +13,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    // Função interna para evitar chamadas síncronas diretas que irritam o React 19
     const hydrateAuth = () => {
       const usuarioRecover = Cookies.get('usuario');
       const tokenRecover = Cookies.get('token');
@@ -31,15 +20,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (usuarioRecover && tokenRecover) {
         try {
           const data = JSON.parse(usuarioRecover);
-          // Só atualizamos se os dados forem realmente novos/diferentes
-          setUsuario(new Usuario(data.codigo, data.nome, "", "ATIVO" ));
+          // Instanciando a classe Usuario com os dados recuperados
+          setUsuario(new Usuario(data.codigo, data.nome, data.email || "", data.status || "ATIVO"));
           setToken(tokenRecover);
         } catch (e) {
           console.error("Erro ao restaurar sessão:", e);
         }
       }
-      
-      // Usamos um pequeno delay ou garantimos que isso rode após o ciclo de render
       setIsInitializing(false);
     };
 
@@ -49,8 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (novoUsuario: Usuario, novoToken: string) => {
     setUsuario(novoUsuario);
     setToken(novoToken);
+    
+    // Persistência em Cookies (Sessão de 7 dias)
     Cookies.set('usuario', JSON.stringify(novoUsuario), { expires: 7, sameSite: 'lax' });
-    Cookies.set('token', novoToken, { expires: 7, secure: true, sameSite: 'lax' });
+    Cookies.set('token', novoToken, { expires: 7, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' });
   };
 
   const logout = () => {

@@ -4,7 +4,7 @@ import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { Projeto } from "@/app/mock/projeto";
-import ProjetoEditForm from "../../componentes/ProjetoEditForm";
+import ProjetoForm from "../../componentes/ProjetoForm"; // Agora importa o componente unificado
 
 export default function EditarProjetoPage({ params }: { params: Promise<{ codigo: string }> }) {
     const resolvedParams = use(params);
@@ -17,7 +17,7 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ codigo
                 const idDaUrl = resolvedParams.codigo;
                 if (!idDaUrl) return;
 
-                // BUSCA REAL: Chamando seu Controller Java
+                // Busca o projeto pelo ID no seu Controller Java
                 const response = await axios.get(`http://localhost:8080/projetos/${idDaUrl}`);
                 
                 if (response.data) {
@@ -32,25 +32,26 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ codigo
         carregarDados();
     }, [resolvedParams.codigo]);
 
+    // Loading State - Estilo SaaS
     if (carregando) {
         return (
             <div className="p-12 flex flex-col items-center justify-center min-h-[400px] gap-4">
-                <div className="w-10 h-10 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                <p className="text-slate-500 font-bold animate-pulse">Buscando dados no Spring Boot...</p>
+                <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-950 rounded-full animate-spin"></div>
+                <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest animate-pulse">Sincronizando com Spring Boot...</p>
             </div>
         );
     }
 
+    // Error State - Caso o ID não exista no banco
     if (!projeto) {
         return (
-            <div className="p-12 text-center">
-                <div className="bg-red-50 text-red-600 p-6 rounded-2xl inline-block mb-4">
-                    <h2 className="text-xl font-black">Projeto não encontrado</h2>
-                    <p className="font-medium">O ID "{resolvedParams.codigo}" não existe no PostgreSQL.</p>
+            <div className="p-12 text-center max-w-md mx-auto">
+                <div className="bg-red-50 border border-red-100 text-red-600 p-8 rounded-[2rem] mb-6">
+                    <h2 className="text-xl font-black uppercase tracking-tighter">Projeto não encontrado</h2>
+                    <p className="font-medium text-sm opacity-80 mt-2">O ID "{resolvedParams.codigo}" não foi localizado no banco de dados.</p>
                 </div>
-                <br />
-                <Link href="/projetos" className="text-indigo-600 font-bold hover:underline">
-                    Voltar para a lista
+                <Link href="/projetos" className="inline-flex items-center gap-2 bg-slate-950 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all">
+                    Voltar para a listagem
                 </Link>
             </div>
         );
@@ -60,25 +61,26 @@ export default function EditarProjetoPage({ params }: { params: Promise<{ codigo
         <div className="min-h-screen py-8 px-4 bg-[#FDFDFD]">
             <div className="max-w-2xl mx-auto mb-10">
                 <div className="flex flex-col gap-6">
-                    <Link href="/projetos" className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-950 transition-colors group w-fit">
+                    {/* Botão Voltar Refinado */}
+                    <Link href="/projetos" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-950 transition-colors group w-fit">
                         <span className="group-hover:-translate-x-1 transition-transform">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                         </span>
-                        Voltar para a listagem
+                        Voltar
                     </Link>
 
                     <div className="space-y-1">
                         <h1 className="text-4xl font-black text-slate-950 tracking-tighter uppercase">Editar Projeto</h1>
-                        <p className="text-slate-500 font-medium">
-                            Atualizando informações do <span className="text-indigo-600">ID #{projeto.id}</span>
+                        <p className="text-slate-500 font-medium text-sm">
+                            Você está editando o <span className="text-slate-950 font-bold underline decoration-slate-300">ID #{projeto.id}</span>
                         </p>
                     </div>
                 </div>
             </div>
 
             <div className="max-w-2xl mx-auto">
-                {/* Passamos o projeto que veio do Banco para o Form */}
-                <ProjetoEditForm projetoInicial={projeto} />
+                {/* O ProjetoForm agora recebe projetoInicial e entende que é uma edição */}
+                <ProjetoForm projetoInicial={projeto} />
             </div>
         </div>
     );
