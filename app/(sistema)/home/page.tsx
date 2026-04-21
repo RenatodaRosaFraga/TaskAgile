@@ -42,7 +42,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {favoritos.map((projeto) => (
+            {favoritos.map((projeto: Projeto) => (
               <div 
                 key={projeto.id} 
                 className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md transition-all group relative overflow-hidden"

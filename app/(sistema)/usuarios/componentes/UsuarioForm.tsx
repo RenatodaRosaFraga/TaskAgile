@@ -1,75 +1,87 @@
 'use client';
-
-import { Usuario } from "@/app/context/AuthContext"
-import axios from "axios";
+import { Usuario, UsuarioFormProps } from "@/app/types/usuarios";
+import api from "@/app/services/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
-interface UsuarioFormProps {
-    usuarioExistente?: Usuario
-}
+
+
 
 export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
-    const router = useRouter();
-    
-    // Inicializa o estado. 
-    // Nota: Usei um objeto simples se o Usuario for uma interface, 
-    // ou mantenha o 'new' se for uma classe.
+
+
     const [usuario, setUsuario] = useState<Usuario>(
-        usuarioExistente || { id: null, nome: '', email: '', status: "ATIVO" } as Usuario
+        usuarioExistente || new Usuario(null, '', '', "ATIVO")
     );
 
-    useEffect(() => {
-        if (usuarioExistente) {
-            setUsuario(usuarioExistente);
-        }
-    }, [usuarioExistente]);
+    const router = useRouter();
 
-    const handlerChange = (campo: 'nome' | 'email', valor: string) => {
-        setUsuario(prev => ({
-            ...prev,
-            [campo]: valor
-        }));
-    };
+    const handleChange = (campo: 'nome' | 'email', valor: string) => {
+        setUsuario(prev =>
+            new Usuario(
+                prev.id,
+                campo === 'nome' ? valor : prev.nome,
+                campo === 'email' ? valor : prev.email,
+                prev.status
+            )
+        )
+    }
 
-    const handlesalvar = async (e: React.FormEvent) => {
-        e.preventDefault(); // Agora o onSubmit vai disparar isso corretamente
+    const handleSalvar = async (formData: FormData) => {
 
         try {
-            // Se tem ID, é Edição (PUT)
-            if (usuario.id !== null) {
-                const url = `http://localhost:8080/usuarios/${usuario.id}`;
-                const dadosResult = await axios.put<number>(url, usuario);
+            if (usuarioExistente) {
+                var dadosResult = await api
+                .put('/usuarios/'+usuarioExistente.id, usuario);
 
-                if (dadosResult.status === 200) {
-                    alert("Usuário atualizado com sucesso!");
-                    router.push("/usuarios");
-                    router.refresh();
+                if (dadosResult.status !== 200) {
+                    return;
                 }
-            } 
-            // Se não tem ID, é Criação (POST)
-            else {
-                const dadosResult = await axios.post<number>('http://localhost:8080/usuarios', usuario);
-                
-                if (dadosResult.status === 201 || dadosResult.status === 200) {
-                    alert("Usuário criado com sucesso! Código: " + dadosResult.data);
-                    router.push("/usuarios");
-                    router.refresh();
+                alert("Usuário editado com sucesso! Código:" + dadosResult.data)
+
+            } else {
+                // Para criação, não enviar o campo id (que é null)
+                const usuarioParaCriacao = {
+                    nome: usuario.nome,
+                    email: usuario.email,
+                    status: usuario.status
+                };
+
+                var dadosResult = await api.post('/usuarios', usuarioParaCriacao);
+
+                if (dadosResult.status !== 200 && dadosResult.status !== 201) {
+                    console.error('Status inesperado:', dadosResult.status);
+                    return;
                 }
+                alert("Usuário salvo com sucesso! Código:" + dadosResult.data)
+
             }
-        } catch (error) {
-            console.error("Erro na requisição:", error);
-            alert("Erro ao salvar usuário. Verifique a conexão com o servidor.");
+
+            router.push("/usuarios")
+        } catch (error: any) {
+            console.error('Erro ao salvar usuário:', error);
+
+            if (error.response?.status === 500) {
+                alert(`Erro interno do servidor ao salvar usuário.\nVerifique os logs do backend.`);
+            } else if (error.response?.status === 400) {
+                alert(`Dados inválidos. Verifique se todos os campos estão preenchidos corretamente.`);
+            } else if (error.response?.status === 401) {
+                alert("Sessão expirada. Faça login novamente.");
+                router.push('/login');
+            } else {
+                alert(`Erro ao salvar usuário: ${error.message}`);
+            }
         }
-    };
+    }
+
+
 
     return (
-        // AJUSTE: Trocado 'action' por 'onSubmit'
-        <form onSubmit={handlesalvar} >
+        <form action={handleSalvar} className="w-full">
             <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm space-y-6">
-                    
+
                     {/* Campo: Nome Completo */}
                     <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
@@ -78,7 +90,7 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
                         <input
                             required
                             value={usuario.nome}
-                            onChange={(e) => handlerChange('nome', e.target.value)}
+                             onChange={(e) => handleChange('nome', e.target.value)}
                             placeholder="Ex: Renato Fraga"
                             className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all text-sm font-medium"
                         />
@@ -93,7 +105,7 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
                             type="email"
                             required
                             value={usuario.email}
-                            onChange={(e) => handlerChange('email', e.target.value)}
+                            onChange={(e) => handleChange('email', e.target.value)}
                             placeholder="seu@email.com"
                             className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all text-sm font-medium"
                         />

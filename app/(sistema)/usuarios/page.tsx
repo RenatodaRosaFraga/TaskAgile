@@ -1,60 +1,55 @@
 'use client';
-
-import { Usuario } from '@/app/types/auth';
-import { buscarListaUsuarios } from '@/app/services/usuarioService';
-import axios from 'axios';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { alterarStatusUsuario, buscarListaUsuarios } from "@/app/services/usuarioService";
+import { Usuario } from "@/app/types/usuarios";
+import Cookies from 'js-cookie';
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function Usuarios() {
-    const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-    const [carregando, setCarregando] = useState(true);
+
+   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
     useEffect(() => {
         carregarDados();
     }, []);
 
-    // Ajustado: Sintaxe da função carregarDados corrigida
     const carregarDados = async () => {
-        setCarregando(true);
-        try {   
+        try {
             const dados = await buscarListaUsuarios();
             setUsuarios(dados);
-        } catch (erro) {
-            alert("Erro ao carregar dados dos usuários!");
-            console.error(erro);
-        } finally {
-            setCarregando(false);
+
+        } catch (error: any) {
+            console.error('Erro detalhado:', error);
+            console.error('Status:', error.response?.status);
+            console.error('Dados do erro:', error.response?.data);
+
+            if (error.response?.status === 401 || error.message?.includes('Token')) {
+                alert("Você precisa fazer login para acessar esta página!");
+                // Redirecionar para login se necessário
+                window.location.href = '/login';
+            } else if (error.response?.status === 500) {
+                alert(`Erro interno do servidor (500). Verifique os logs do backend.\nDetalhes: ${error.response?.data?.message || 'Erro desconhecido'}`);
+            } else {
+                alert("Erro ao carregar dados dos usuários!");
+            }
         }
-    };
+    }
 
     const handlerAlterarStatus = async (usuario: Usuario) => {
-        const novoStatus = usuario.status === "ATIVO" ? "INATIVO" : "ATIVO";
-        
-        const confirmar = confirm(`Deseja alterar o status de ${usuario.nome} para ${novoStatus}?`);
-        if (!confirmar) return;
-
         try {
-            // Usa 'codigo' conforme definido na sua classe Usuario
-            const idUsuario = usuario.codigo || (usuario as any).id;
-            
-            const response = await axios.put(`http://localhost:8080/usuarios/${idUsuario}/AlterarStatus`, {
-                status: novoStatus
-            });
-
-            if (response.status === 200) {
-                setUsuarios(prev => 
-                    prev.map(u => {
-                        const currentId = u.codigo || (u as any).id;
-                        return currentId === idUsuario ? { ...u, status: novoStatus } : u;
-                    })
-                );
+            await alterarStatusUsuario(usuario);
+            carregarDados();
+            alert("Status do usuário alterado com sucesso!");
+        } catch (error: any) {
+            console.error(error);
+            if (error.response?.status === 401 || error.message?.includes('Token')) {
+                alert("Sua sessão expirou. Faça login novamente!");
+                window.location.href = '/login';
+            } else {
+                alert("Erro ao alterar status do usuário!");
             }
-        } catch (error) {
-            console.error("Erro ao alterar status:", error);
-            alert("Erro técnico ao alterar status no servidor.");
         }
-    };
+    }
 
     return (
         <div className="p-8 max-w-7xl mx-auto">
@@ -88,9 +83,9 @@ export default function Usuarios() {
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {usuarios.map((usuario) => (
-                                    <tr key={usuario.codigo || (usuario as any).id} className="hover:bg-slate-50/30 transition-colors group">
+                                    <tr key={usuario.id} className="hover:bg-slate-50/30 transition-colors group">
                                         <td className="px-8 py-5 text-sm font-bold text-slate-400">
-                                            #{(usuario.codigo || (usuario as any).id)}
+                                            #{(usuario.id)}
                                         </td>
                                         <td className="px-8 py-5 text-sm font-black text-slate-950 uppercase tracking-tight">
                                             {usuario.nome}
@@ -99,30 +94,28 @@ export default function Usuarios() {
                                             {usuario.email}
                                         </td>
                                         <td className="px-8 py-5">
-                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
-                                                usuario.status === 'ATIVO'
+                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${usuario.status === 'ATIVO'
                                                     ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200'
                                                     : 'bg-slate-100 text-slate-500 ring-1 ring-slate-200'
-                                            }`}>
+                                                }`}>
                                                 {usuario.status}
                                             </span>
                                         </td>
                                         <td className="px-8 py-5 text-right">
                                             <div className="flex justify-end items-center gap-3">
                                                 <Link
-                                                    href={`/usuarios/${usuario.codigo || (usuario as any).id}/editar`}
+                                                    href={`/usuarios/${usuario.id}/editar`}
                                                     className="p-2.5 text-slate-400 hover:text-slate-950 hover:bg-slate-100 rounded-xl transition-all"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
                                                 </Link>
-                                                
+
                                                 <button
                                                     onClick={() => handlerAlterarStatus(usuario)}
-                                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                                        usuario.status === 'ATIVO'
+                                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${usuario.status === 'ATIVO'
                                                             ? 'text-red-500 hover:bg-red-50'
                                                             : 'text-emerald-600 hover:bg-emerald-50'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {usuario.status === "ATIVO" ? 'Desativar' : 'Reativar'}
                                                 </button>
@@ -134,14 +127,9 @@ export default function Usuarios() {
                                 {usuarios.length === 0 && (
                                     <tr>
                                         <td colSpan={5} className="px-8 py-20 text-center">
-                                            {carregando ? (
-                                                <div className="flex flex-col items-center gap-3">
-                                                    <div className="w-6 h-6 border-2 border-slate-200 border-t-slate-950 rounded-full animate-spin" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sincronizando base de dados...</span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-sm font-medium text-slate-400 italic">Nenhum registro encontrado.</span>
-                                            )}
+                                            <span className="text-sm font-medium text-slate-400 italic">
+                                                Nenhum registro encontrado.
+                                            </span>
                                         </td>
                                     </tr>
                                 )}
