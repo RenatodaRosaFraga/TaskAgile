@@ -11,57 +11,48 @@ export default function LoginPage() {
   const router = useRouter();
   const dispatch = useDispatch();
 
-
   const handleLogin = async (formData: FormData) => {
-
     const email = formData.get('email');
     const senha = formData.get('senha');
 
     try {
+      const loginResult = await axios.post<LoginResponse>('http://localhost:8080/auth/login', {
+        email: email,
+        senha: senha
+      });
 
-      // //var loginResult = await fetch("http//localhost:8080/auth/login", {
-      //   method : 'POST',
-      //   headers:{
-      //     'Content-Type':'application/json'
-      //   },
-      //   body: JSON.stringify({email:email, senha})
-      // });
-
-      const loginResult = await axios.post<LoginResponse>('http://localhost:8080/auth/login',
-        {email:email,senha:senha});
-
-      if (loginResult.status !== 200) {
-        alert("Usuario ou senha inválido!")
-        return;
-      }
-
+      // Se o código chegou aqui, o status é 2xx (Sucesso)
       const usuarioMock = new Usuario(1, "Renato Fraga", "", "ATIVO");
 
+      dispatch(login({
+        usuario: { ...usuarioMock },
+        token: loginResult.data.token
+      }));
 
-      dispatch(login(
-                {
-                    usuario: {...usuarioMock},
-                    token: loginResult.data.token
-                }
-            ));
+      console.log(`Autenticado com sucesso: ${email}`);
 
+      // Redirecionamento seguro: só acontece se não houver erro acima
+      router.push("/home");
 
-    } catch (error) {
-      alert("Erro ao entrar no sistema!");
+  } catch (error) {
+      if (axios.isAxiosError(error)) {
+        // Agora o TS sabe que 'error' tem a propriedade 'response'
+        if (error.response?.status === 401) {
+          alert("E-mail ou senha inválidos. Por favor, tente novamente.");
+        } else {
+          alert("Erro no servidor: " + (error.message || "Tente novamente."));
+        }
+      } else {
+        alert("Ocorreu um erro inesperado.");
+      }
+      console.error("Erro na autenticação:", error);
     }
-
-
-    console.log(`autenticado com email: ${email}`)
-
-    router.push("/home")
-  }
-
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] font-sans text-slate-900 antialiased flex flex-col justify-center py-12 px-6">
-
       <div className="sm:mx-auto sm:w-full sm:max-w-[400px]">
-        {/* Branding */}
+        
         <div className="flex flex-col items-center mb-10">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-950 text-white font-black text-2xl shadow-2xl shadow-slate-950/30">
             TA
@@ -72,11 +63,8 @@ export default function LoginPage() {
           <p className="text-slate-500 font-medium">Gestão sem esforço.</p>
         </div>
 
-        {/* Card de Login */}
         <div className="bg-white px-8 py-10 shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 rounded-[2.5rem]">
-          {/* Usando action do React 19 */}
           <form action={handleLogin} className="space-y-6">
-
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
                 E-mail Profissional
@@ -91,12 +79,9 @@ export default function LoginPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center px-1">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                  Senha
-                </label>
-            
-              </div>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
+                Senha
+              </label>
               <input
                 required
                 name="senha"
@@ -113,8 +98,6 @@ export default function LoginPage() {
               Entrar no App
             </button>
           </form>
-
-        
         </div>
       </div>
     </div>

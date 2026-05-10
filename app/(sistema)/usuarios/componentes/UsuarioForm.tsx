@@ -1,15 +1,12 @@
 'use client'
 import { Usuario, UsuarioFormProps } from "@/app/types/usuarios";
-import axios from "axios";
+import api from "@/app/services/api"; // Importando sua instância configurada com interceptors
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react"
-
-
-
+import { useState } from "react";
+import axios from "axios"; // Mantemos apenas para usar o axios.isAxiosError no catch
 
 export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
-
 
     const [usuario, setUsuario] = useState<Usuario>(
         usuarioExistente || new Usuario(null, '', '', "ATIVO")
@@ -25,34 +22,43 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
                 campo === 'email' ? valor : prev.email,
                 prev.status
             )
-        )
-    }
+        );
+    };
 
-      const handleSalvar = async (formData: FormData) => {
+    const handleSalvar = async () => {
+        try {
+            if (usuarioExistente) {
+                // UPDATE: Usando a instância 'api' que envia o Token
+                const dadosResult = await api.put<number>(`/usuarios/${usuarioExistente.id}`, usuario);
+              
+                if (dadosResult.status === 200) {
+                    alert("Usuário editado com sucesso!");
+                }
+            } else {
+                // CREATE: Usando a instância 'api' que envia o Token
+                const dadosResult = await api.post<number>('/usuarios', usuario);
 
-        if (usuarioExistente) {
-            var dadosResult = await axios
-            .put<number>('http://localhost:8080/usuarios/'+usuarioExistente.id, usuario);
-          
-            if (dadosResult.status !== 200) {
-                return;
+                if (dadosResult.status === 200 || dadosResult.status === 201) {
+                    alert("Usuário salvo com sucesso!");
+                }
             }
-            alert("Usuário editado com sucesso! Código:" + dadosResult.data)
 
-        } else {
+            router.push("/usuarios");
+            router.refresh(); // Força a atualização da listagem
 
-            var dadosResult = await axios.post<number>('http://localhost:8080/usuarios', usuario);
-
-            if (dadosResult.status !== 200) {
-                return;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response?.status === 401) {
+                    alert("Sua sessão expirou ou você não tem permissão de Administrador.");
+                } else {
+                    alert("Erro ao salvar usuário: " + (error.response?.data || error.message));
+                }
+            } else {
+                alert("Ocorreu um erro inesperado.");
             }
-            alert("Usuário salvo com sucesso! Código:" + dadosResult.data)
-
+            console.error("Erro na operação:", error);
         }
-
-        router.push("/usuarios")
-    }
-
+    };
 
     return (
         <form action={handleSalvar} className="w-full">
@@ -67,7 +73,7 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
                         <input
                             required
                             value={usuario.nome}
-                             onChange={(e) => handleChange('nome', e.target.value)}
+                            onChange={(e) => handleChange('nome', e.target.value)}
                             placeholder="Ex: Renato Fraga"
                             className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all text-sm font-medium"
                         />
@@ -107,5 +113,5 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
                 </div>
             </div>
         </form>
-    )
+    );
 }
