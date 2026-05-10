@@ -2,13 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { useAuth } from "../context/AuthContext";
 import { Usuario } from "../types/usuarios";
 import { LoginResponse } from "../types/auth";
+import { useDispatch } from "react-redux";
+import { login } from "../redux/slices/authSlice";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const dispatch = useDispatch();
 
 
   const handleLogin = async (formData: FormData) => {
@@ -27,7 +28,7 @@ export default function LoginPage() {
       // });
 
       const loginResult = await axios.post<LoginResponse>('http://localhost:8080/auth/login',
-        { email:'String@s', senha:'String@s' }); // Credenciais hardcoded do backend
+        {email:email,senha:senha});
 
       if (loginResult.status !== 200) {
         alert("Usuario ou senha inválido!")
@@ -37,7 +38,12 @@ export default function LoginPage() {
       const usuarioMock = new Usuario(1, "Renato Fraga", "", "ATIVO");
 
 
-      login(usuarioMock, loginResult.data.Token)
+      dispatch(login(
+                {
+                    usuario: {...usuarioMock},
+                    token: loginResult.data.token
+                }
+            ));
 
 
     } catch (error) {
@@ -89,9 +95,7 @@ export default function LoginPage() {
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                   Senha
                 </label>
-                <a href="#" className="text-[10px] font-bold text-slate-400 hover:text-slate-950 transition-colors">
-                  Esqueceu?
-                </a>
+            
               </div>
               <input
                 required
@@ -110,14 +114,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-8 text-center border-t border-slate-50 pt-8">
-            <p className="text-sm text-slate-500 font-medium">
-              Não tem conta?{' '}
-              <a href="#" className="text-slate-950 font-bold hover:underline underline-offset-4">
-                Criar agora
-              </a>
-            </p>
-          </div>
+        
         </div>
       </div>
     </div>

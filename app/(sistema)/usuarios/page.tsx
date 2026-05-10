@@ -1,7 +1,6 @@
 'use client';
 import { alterarStatusUsuario, buscarListaUsuarios } from "@/app/services/usuarioService";
 import { Usuario } from "@/app/types/usuarios";
-import Cookies from 'js-cookie';
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -9,52 +8,48 @@ export default function Usuarios() {
 
    const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
-    useEffect(() => {
-        carregarDados();
-    }, []);
-
     const carregarDados = async () => {
         try {
             const dados = await buscarListaUsuarios();
             setUsuarios(dados);
 
-        } catch (error: any) {
-            console.error('Erro detalhado:', error);
-            console.error('Status:', error.response?.status);
-            console.error('Dados do erro:', error.response?.data);
-
-            if (error.response?.status === 401 || error.message?.includes('Token')) {
-                alert("Você precisa fazer login para acessar esta página!");
-                // Redirecionar para login se necessário
-                window.location.href = '/login';
-            } else if (error.response?.status === 500) {
-                alert(`Erro interno do servidor (500). Verifique os logs do backend.\nDetalhes: ${error.response?.data?.message || 'Erro desconhecido'}`);
-            } else {
-                alert("Erro ao carregar dados dos usuários!");
-            }
+        } catch (error) {
+            alert("Erro ao carregar dados dos usuário!")
+            console.error(error)
         }
     }
 
+    useEffect(() => {
+        const loadUsuarios = async () => {
+            try {
+                const dados = await buscarListaUsuarios();
+                setUsuarios(dados);
+            } catch (error) {
+                alert("Erro ao carregar dados dos usuário!")
+                console.error(error)
+            }
+        };
+
+        loadUsuarios();
+    }, []);
+
     const handlerAlterarStatus = async (usuario: Usuario) => {
         try {
+
             await alterarStatusUsuario(usuario);
             carregarDados();
-            alert("Status do usuário alterado com sucesso!");
-        } catch (error: any) {
-            console.error(error);
-            if (error.response?.status === 401 || error.message?.includes('Token')) {
-                alert("Sua sessão expirou. Faça login novamente!");
-                window.location.href = '/login';
-            } else {
-                alert("Erro ao alterar status do usuário!");
-            }
+
+             alert("Usuário salvo com sucesso! Código:" + usuario.id)
+
+        } catch (error) {
+            console.error(error)
+            alert("Erro ao alterar status do usuário!")
         }
     }
 
     return (
         <div className="p-8 max-w-7xl mx-auto">
             <div className="space-y-8 animate-in fade-in duration-500">
-                {/* HEADER */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="space-y-1">
                         <h1 className="text-3xl font-black text-slate-950 tracking-tighter uppercase">Gestão de Usuários</h1>
@@ -68,7 +63,7 @@ export default function Usuarios() {
                     </Link>
                 </div>
 
-                {/* TABELA */}
+  
                 <div className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">

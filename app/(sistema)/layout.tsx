@@ -6,27 +6,26 @@ import Sidebar from "../components/Sidebar";
 import { FavoritoProvider } from "@/app/context/FavoritoContext"; 
 import { AuthProvider, useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { usuario, token } = useAuth();
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     if (!usuario || !token) {
       router.push('/login');
     }
   }, [usuario, token, router]);
 
+  if (!isMounted) {
+    return null;
+  }
+
   if (!usuario || !token) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-950 mx-auto mb-4"></div>
-          <p className="text-slate-600">Verificando autenticação...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return <>{children}</>;

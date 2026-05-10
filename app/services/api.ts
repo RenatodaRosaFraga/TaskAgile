@@ -7,15 +7,13 @@ const api = axios.create({
 });
 api.interceptors.request.use(
     (config) => {
-        // Busca o cookie SEMPRE no momento da chamada
         const token = Cookies.get('token');
 
-        if (token && token.trim() !== '') {
-            config.headers.Authorization = `Bearer ${token}`;
+        if(token){
+            config.headers.Authorization= `Bearer ${token}`;
         }
         return config;
-    },
-    (error) => Promise.reject(error)
+    }
 );
 
 

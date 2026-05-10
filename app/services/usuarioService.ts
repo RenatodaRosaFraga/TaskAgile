@@ -15,15 +15,15 @@ export async function buscarListaUsuarios(): Promise<Usuario[]> {
 
 export async function alterarStatusUsuario(usuario: Usuario): Promise<void> {
 
-    var novoStatus = {};
+    let novoStatus = {};
     if (usuario.status === "ATIVO") {
         novoStatus = { status: "INATIVO" };
     } else {
         novoStatus = { status: "ATIVO" };
     }
 
-    var dadosResult = await api
-        .put<number>('/usuarios/' + usuario.id + '/AlterarStatus', novoStatus);
+    const dadosResult = await api
+        .put<number>('/usuarios/' + usuario.id + '/AlterarStatus', { status: novoStatus });
 
     if (dadosResult.status !== 200) {
         alert("Erro ao atualizar Status!")

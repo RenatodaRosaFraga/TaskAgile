@@ -8,28 +8,27 @@ import { AuthContextType, Usuario } from "../types/usuarios";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const router = useRouter();
-
-  useEffect(() => {
-      const usuarioRecover = Cookies.get('usuario');
-      const tokenRecover = Cookies.get('token');
-
-      if (usuarioRecover && tokenRecover) {
-            try {
-                setUsuario(JSON.parse(usuarioRecover));
-                setToken(tokenRecover);
-                router.push(window.location.pathname)
-            } catch (e) {
-                console.error(e);
-            }
+    const [usuario, setUsuario] = useState<Usuario | null>(() => {
+        const usuarioRecover = Cookies.get('usuario');
+        if (!usuarioRecover) return null;
+        try {
+            return JSON.parse(usuarioRecover) as Usuario;
+        } catch (e) {
+            console.error(e);
+            return null;
         }
+    });
+    const [token, setToken] = useState<string | null>(() => Cookies.get('token') ?? null);
+    const router = useRouter();
 
-    }, []);
+    useEffect(() => {
+        if (usuario && token) {
+            router.push(window.location.pathname);
+        }
+    }, [router, usuario, token]);
 
     const login = (usuario: Usuario, token: string) => {
-   
+        
         setUsuario(usuario);
         setToken(token);
         Cookies.set('usuario', JSON.stringify(usuario), { expires: 7 });
@@ -37,15 +36,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     }
 
- const logout = () => {
+    const logout = () => {
         setUsuario(null);
         setToken(null);
         Cookies.remove('usuario');
         Cookies.remove('token');
 
     }
- 
-     return (
+
+    return (
         <AuthContext.Provider value={{ usuario, token, login, logout }}>
             {children}
         </AuthContext.Provider>
@@ -53,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth deve ser usado dentro de um AuthProvider!');
-  return context;
+    const context = useContext(AuthContext);
+    if (!context) throw new Error('useAuth deve ser usado dentro do provider!')
+    return context;
 }

@@ -1,3 +1,10 @@
+import { Usuario } from "./usuarios";
+
 export interface LoginResponse{
-    Token: string
+    token: string
+}
+
+export interface AuthState {
+    usuario: Usuario | null; 
+    token: string;
 }

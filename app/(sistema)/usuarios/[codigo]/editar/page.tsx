@@ -1,13 +1,9 @@
-'use client';
-
-import { Usuario } from "@/app/context/AuthContext";
-import { usuarioMock } from "@/app/mock/usuario";
-import { useParams } from "next/navigation";
-import { useRouter } from "next/navigation";
+'use client'
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import UsuarioForm from "../../componentes/UsuarioForm";
 import axios from "axios";
-
+import { Usuario } from "@/app/types/usuarios";
 
 
 export default function EditarUsuario() {
@@ -19,15 +15,15 @@ export default function EditarUsuario() {
     const [usuario, setUsuario] = useState<Usuario | null>(null);
 
     useEffect(() => {
-        buscarDados();
-    }, []);
+        async function loadDados() {
+            const user = await axios.get<Usuario>('http://localhost:8080/usuarios/'+codigo)
 
-    const buscarDados = async () => {
-        const user = await axios.get<Usuario>('http://localhost:8080/usuarios/'+codigo)
+            if (user.data) setUsuario(user.data)
+            else router.push("/usuarios")
+        }
 
-        if (user.data) setUsuario(user.data)
-        else router.push("/usuarios")
-    }
+        loadDados();
+    }, [codigo, router]);
 
     if (!usuario) return (<div className="p-8"> Carregando dados...</div>)
 

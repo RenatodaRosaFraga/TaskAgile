@@ -1,6 +1,6 @@
-'use client';
+'use client'
 import { Usuario, UsuarioFormProps } from "@/app/types/usuarios";
-import api from "@/app/services/api";
+import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react"
@@ -28,53 +28,30 @@ export default function UsuarioForm({ usuarioExistente }: UsuarioFormProps) {
         )
     }
 
-    const handleSalvar = async (formData: FormData) => {
+      const handleSalvar = async (formData: FormData) => {
 
-        try {
-            if (usuarioExistente) {
-                var dadosResult = await api
-                .put('/usuarios/'+usuarioExistente.id, usuario);
-
-                if (dadosResult.status !== 200) {
-                    return;
-                }
-                alert("Usuário editado com sucesso! Código:" + dadosResult.data)
-
-            } else {
-                // Para criação, não enviar o campo id (que é null)
-                const usuarioParaCriacao = {
-                    nome: usuario.nome,
-                    email: usuario.email,
-                    status: usuario.status
-                };
-
-                var dadosResult = await api.post('/usuarios', usuarioParaCriacao);
-
-                if (dadosResult.status !== 200 && dadosResult.status !== 201) {
-                    console.error('Status inesperado:', dadosResult.status);
-                    return;
-                }
-                alert("Usuário salvo com sucesso! Código:" + dadosResult.data)
-
+        if (usuarioExistente) {
+            var dadosResult = await axios
+            .put<number>('http://localhost:8080/usuarios/'+usuarioExistente.id, usuario);
+          
+            if (dadosResult.status !== 200) {
+                return;
             }
+            alert("Usuário editado com sucesso! Código:" + dadosResult.data)
 
-            router.push("/usuarios")
-        } catch (error: any) {
-            console.error('Erro ao salvar usuário:', error);
+        } else {
 
-            if (error.response?.status === 500) {
-                alert(`Erro interno do servidor ao salvar usuário.\nVerifique os logs do backend.`);
-            } else if (error.response?.status === 400) {
-                alert(`Dados inválidos. Verifique se todos os campos estão preenchidos corretamente.`);
-            } else if (error.response?.status === 401) {
-                alert("Sessão expirada. Faça login novamente.");
-                router.push('/login');
-            } else {
-                alert(`Erro ao salvar usuário: ${error.message}`);
+            var dadosResult = await axios.post<number>('http://localhost:8080/usuarios', usuario);
+
+            if (dadosResult.status !== 200) {
+                return;
             }
+            alert("Usuário salvo com sucesso! Código:" + dadosResult.data)
+
         }
-    }
 
+        router.push("/usuarios")
+    }
 
 
     return (
