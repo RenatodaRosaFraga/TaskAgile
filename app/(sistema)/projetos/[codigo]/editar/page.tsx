@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import axios from "axios";
-import { Projeto } from "@/app/mock/projeto";
+import { Projeto } from "@/app/types/projetos";
 import ProjetoForm from "../../componentes/ProjetoForm"; // Agora importa o componente unificado
 
 export default function EditarProjetoPage({ params }: { params: Promise<{ codigo: string }> }) {

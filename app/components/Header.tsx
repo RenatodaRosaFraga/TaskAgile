@@ -30,10 +30,10 @@ export default function Header() {
           <div className="flex flex-col">
             <span className="text-sm font-bold text-slate-800 leading-tight">
               {/* 3. Nome Dinâmico */}
-              {usuario?.name || "Renato Fraga"}
+              {usuario?.nome || "Renato Fraga"}
             </span>
             <span className="text-[10px] uppercase tracking-wider font-medium text-slate-400">
-              ID: {usuario?.codigo || "Admin"}
+              ID: {usuario?.id || "Admin"}
             </span>
           </div>
         </div>

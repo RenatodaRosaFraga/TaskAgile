@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useFavoritos } from '@/app/context/FavoritoContext';
+import { Projeto } from "@/app/types/projetos";
 
 export default function Home() {
   const { favoritos, alternarFavorito } = useFavoritos();
