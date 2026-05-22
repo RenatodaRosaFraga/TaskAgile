@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import Cookies from 'js-cookie';
 import { Projeto } from '@/app/types/projetos';
 import { FavoritoContextType } from '@/app/types/favorito';
@@ -10,34 +10,30 @@ const FavoritoContext = createContext<FavoritoContextType | undefined>(undefined
 const COOKIE_NAME = '@TaskAgile:favoritos';
 
 export function FavoritoProvider({ children }: { children: React.ReactNode }) {
-  const [favoritos, setFavoritos] = useState<Projeto[]>([]);
-
-  // 1. Carrega favoritos dos Cookies ao iniciar
-  useEffect(() => {
+  const [favoritos, setFavoritos] = useState<Projeto[]>(() => {
     const salvos = Cookies.get(COOKIE_NAME);
-    if (salvos) {
-      try {
-        setFavoritos(JSON.parse(salvos));
-      } catch (e) {
-        console.error("Erro ao converter favoritos dos cookies", e);
-      }
+    if (!salvos) return [];
+    try {
+      return JSON.parse(salvos) as Projeto[];
+    } catch (e) {
+      console.error("Erro ao converter favoritos dos cookies", e);
+      return [];
     }
-  }, []);
-
-  // 2. Salva nos Cookies sempre que a lista mudar
-  useEffect(() => {
-    // Só salva se houver alteração real para evitar loops ou cookies vazios indevidos
-    Cookies.set(COOKIE_NAME, JSON.stringify(favoritos), { expires: 7, path: '/' });
-  }, [favoritos]);
+  });
 
   const alternarFavorito = (projeto: Projeto) => {
     setFavoritos((prev) => {
-      // Verificação de ID para evitar erros de tipagem caso o ID seja undefined
       const existe = prev.find((p) => p.id === projeto.id);
+      let novaLista: Projeto[];
+
       if (existe) {
-        return prev.filter((p) => p.id !== projeto.id);
+        novaLista = prev.filter((p) => p.id !== projeto.id);
+      } else {
+        novaLista = [...prev, projeto];
       }
-      return [...prev, projeto];
+
+      Cookies.set(COOKIE_NAME, JSON.stringify(novaLista), { expires: 7, path: '/' });
+      return novaLista;
     });
   };
 

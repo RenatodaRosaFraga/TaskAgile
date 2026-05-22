@@ -60,6 +60,7 @@ export default function Projetos() {
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">ID</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Projeto</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Prazo</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Localização</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Favorito</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Ações</th>
                 </tr>
@@ -70,7 +71,7 @@ export default function Projetos() {
                 {carregando && (
                   [1, 2, 3].map((i) => (
                     <tr key={i} className="animate-pulse">
-                      <td colSpan={5} className="px-8 py-5.5">
+                      <td colSpan={6} className="px-8 py-5.5">
                         <div className="h-5 bg-slate-100 rounded-lg w-full" />
                       </td>
                     </tr>
@@ -93,9 +94,20 @@ export default function Projetos() {
                     
                     {/* PRAZO FORMATADO */}
                     <td className="px-8 py-5 text-sm font-medium text-slate-500">
-                      {projeto.prazo.includes('-') 
-                        ? projeto.prazo.split('-').reverse().join('/') 
+                      {projeto.prazo.includes('-')
+                        ? projeto.prazo.split('-').reverse().join('/')
                         : projeto.prazo}
+                    </td>
+
+                    {/* LOCALIZAÇÃO */}
+                    <td className="px-8 py-5 text-sm font-medium text-slate-500">
+                      {projeto.localidade && projeto.uf ? (
+                        <span className="inline-flex items-center gap-1">
+                          📍 {projeto.localidade}/{projeto.uf}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300 text-xs">-</span>
+                      )}
                     </td>
                     
                     {/* STATUS DE FAVORITO (Como um Badge/Botão elegante) */}
@@ -133,7 +145,7 @@ export default function Projetos() {
                 {/* ESTADO VAZIO (Padrão de tabela) */}
                 {!carregando && projetos.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-8 py-20 text-center">
+                    <td colSpan={6} className="px-8 py-20 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <span className="text-sm font-medium text-slate-400 italic">
                           Nenhum projeto encontrado.

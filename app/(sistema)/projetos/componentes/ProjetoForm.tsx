@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 // Tipagem do Projeto
 export interface Projeto {
@@ -11,6 +11,12 @@ export interface Projeto {
   nome: string;
   prazo: string;
   status: string;
+  cep?: string;
+  logradouro?: string;
+  complemento?: string;
+  bairro?: string;
+  localidade?: string;
+  uf?: string;
 }
 
 // Props do Formulário
@@ -22,7 +28,7 @@ export default function ProjetoForm({ projetoInicial }: ProjetoFormProps) {
   const router = useRouter();
 
   const [projeto, setProjeto] = useState<Projeto>(
-    projetoInicial || { id: null, nome: "", prazo: "", status: "ATIVO" }
+    projetoInicial || { id: null, nome: "", prazo: "", status: "ATIVO", cep: "" }
   );
   const [enviando, setEnviando] = useState(false);
 
@@ -51,8 +57,12 @@ export default function ProjetoForm({ projetoInicial }: ProjetoFormProps) {
 
       router.push("/projetos");
       router.refresh();
-    } catch (error: any) {
-      console.error("Erro detalhado:", error.response?.data || error.message);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error("Erro detalhado:", error.response?.data || error.message);
+      } else {
+        console.error("Erro inesperado:", error);
+      }
       alert("Erro ao salvar no servidor. Verifique se o backend está rodando.");
     } finally {
       setEnviando(false);
@@ -105,6 +115,39 @@ export default function ProjetoForm({ projetoInicial }: ProjetoFormProps) {
             className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all text-sm font-medium disabled:opacity-50"
           />
         </div>
+
+        {/* Campo: CEP */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
+            CEP da Localização
+          </label>
+          <input
+            disabled={enviando}
+            value={projeto.cep || ""}
+            onChange={(e) => handlerChange("cep", e.target.value)}
+            placeholder="Ex: 01310-100"
+            maxLength={9}
+            className="w-full p-4 rounded-2xl border-none bg-slate-50 text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-950 outline-none transition-all placeholder:text-slate-400 text-sm font-medium disabled:opacity-50"
+          />
+          <p className="text-xs text-slate-400 ml-1">
+            O endereço será preenchido automaticamente ao salvar
+          </p>
+        </div>
+
+        {/* Exibir endereço se já existir */}
+        {projeto.logradouro && (
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">
+              Endereço Cadastrado
+            </p>
+            <p className="text-sm text-slate-700">
+              {projeto.logradouro}
+              {projeto.complemento && `, ${projeto.complemento}`}
+              <br />
+              {projeto.bairro} - {projeto.localidade}/{projeto.uf}
+            </p>
+          </div>
+        )}
 
         {/* Ações */}
         <div className="flex items-center gap-4 pt-4">
